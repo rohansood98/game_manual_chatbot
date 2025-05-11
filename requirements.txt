@@ -1,0 +1,11 @@
+streamlit
+openai>=1.0.0
+chromadb-client
+python-dotenv
+tiktoken
+pypdf
+langchain
+langgraph
+langchain_openai
+boardgamegeek2
+lxml

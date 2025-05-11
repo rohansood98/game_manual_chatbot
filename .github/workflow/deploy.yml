@@ -1,0 +1,76 @@
+name: Deploy Board Game Agent to Hugging Face Spaces
+
+on:
+  push:
+    branches:
+      - main # Or your default deployment branch
+
+jobs:
+  deploy_to_hf_space:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Python setup here is mostly for the huggingface-cli, actual app runs in Docker.
+      - name: Set up Python for CLI
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install huggingface_hub for CLI
+        run: pip install huggingface_hub
+
+      - name: Push to Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }} # e.g., "YourUsername/YourSpaceName"
+        run: |
+          echo "Logging into Hugging Face Hub..."
+          huggingface-cli login --token $HF_TOKEN --add-to-git-credential
+          
+          echo "Cloning or creating Space repository for $HF_SPACE_ID..."
+          # For Dockerized Spaces, we don't specify --sdk or --python.
+          # The presence of a Dockerfile signals Hugging Face to use the Docker runtime.
+          # If the Space existed previously with a different SDK, you might need to delete and recreate it,
+          # or manually change its SDK to Docker in the HF Space settings for the first deployment.
+          huggingface-cli repo create $HF_SPACE_ID --type space --exist-ok
+          
+          SPACE_URL="https://huggingface.co/spaces/$HF_SPACE_ID"
+          echo "Space URL: $SPACE_URL"
+          
+          # Create a temporary directory for cloning the Space repo
+          TEMP_SPACE_DIR=$(mktemp -d)
+          echo "Cloning Space repo into $TEMP_SPACE_DIR"
+          git clone "$SPACE_URL" "$TEMP_SPACE_DIR"
+          
+          echo "Syncing files to Space repository..."
+          # Rsyncs everything from the current GitHub repo checkout to the temporary clone
+          # of the Hugging Face Space repo. This includes Dockerfile, src/, data/, requirements.txt etc.
+          rsync -av --delete \
+            --exclude=".git/" \
+            --exclude=".github/" \
+            --exclude=".env" \
+            --exclude=".env.example" \
+            --exclude="*.pyc" \
+            --exclude="__pycache__/" \
+            --exclude=".venv/" \
+            --exclude="venv/" \
+            --exclude="ENV/" \
+            --exclude="env/" \
+            ./ "$TEMP_SPACE_DIR/"
+
+          echo "Committing and pushing to Space..."
+          cd "$TEMP_SPACE_DIR"
+          git lfs track "*.safetensors" # Good practice if large model files are ever added
+          git add .
+          
+          # Commit only if there are changes
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Update Space from GitHub Action (workflow: ${GITHUB_WORKFLOW}, run: ${GITHUB_RUN_ID})"
+            git push origin main # Assumes the Space repo's default branch is 'main'
+          else
+            echo "No changes to commit to Space repo."
+          fi
+          
+          echo "Deployment script finished. Hugging Face will now build the Docker image based on Dockerfile."
