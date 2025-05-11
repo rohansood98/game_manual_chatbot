@@ -5,6 +5,7 @@ import chromadb
 from openai import OpenAI # Updated import
 from dotenv import load_dotenv
 from pypdf import PdfReader
+import re
 
 # --- Configuration ---
 load_dotenv()
@@ -86,9 +87,17 @@ def get_embeddings_openai(texts, model=EMBEDDING_MODEL, batch_size=20): # OpenAI
     print(f"  Finished getting embeddings. Total embeddings: {len(all_embeddings)}")
     return all_embeddings
 
+def clean_game_name(filename):
+    """Remove _Manual, _Rule, _manual (case-insensitive) from the filename before formatting."""
+    name = os.path.splitext(filename)[0]
+    # Remove _Manual, _Rule, _manual (case-insensitive) at the end or before extension
+    name = re.sub(r'(_manual|_rule)$', '', name, flags=re.IGNORECASE)
+    name = name.replace('_', ' ').replace('-', ' ').title()
+    return name
+
 def update_supported_games_list(processed_pdf_names):
     os.makedirs(os.path.dirname(SUPPORTED_GAMES_FILE), exist_ok=True)
-    game_names = [os.path.splitext(name)[0].replace('_', ' ').replace('-', ' ').title() for name in processed_pdf_names]
+    game_names = [clean_game_name(name) for name in processed_pdf_names]
     try:
         with open(SUPPORTED_GAMES_FILE, "w") as f:
             for name in sorted(list(set(game_names))): # Sort and ensure unique
@@ -167,7 +176,7 @@ def main(pdf_directory, collection_name_arg, clear_collection=False):
             print(f"Mismatch in chunk ({len(text_chunks)}) and embedding ({len(chunk_embeddings)}) count for {pdf_file}. Skipping.")
             continue
         
-        game_name_from_file = os.path.splitext(pdf_file)[0].replace('_', ' ').replace('-', ' ').title()
+        game_name_from_file = clean_game_name(pdf_file)
         for i, chunk in enumerate(text_chunks):
             all_docs.append(chunk)
             all_metadatas.append({"source_file": pdf_file, "game_name": game_name_from_file, "chunk_num": i + 1})

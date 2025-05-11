@@ -1,3 +1,4 @@
+re
 streamlit
 openai>=1.0.0
 chromadb-client
