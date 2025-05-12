@@ -5,6 +5,7 @@ import re # For regex preprocessing and game name cleaning
 import uuid # For Qdrant point IDs
 from openai import OpenAI
 from dotenv import load_dotenv
+import pdfplumber
 from pypdf import PdfReader
 from qdrant_client import QdrantClient, models # Qdrant imports
 
@@ -42,21 +43,44 @@ UPSERT_BATCH_SIZE = 100 # Batch size for upserting points to Qdrant
 
 # --- Helper Functions ---
 
-def extract_text_from_pdf(pdf_path):
-    # (Same as before)
-    print(f"Extracting text from: {pdf_path}")
-    reader = PdfReader(pdf_path)
-    text = ""
-    for page_num, page in enumerate(reader.pages):
-        try:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n" # Add newline between pages for context
-        except Exception as e:
-            print(f"  Warning: Could not extract text from page {page_num + 1} of {pdf_path}. Error: {e}")
-            continue # Skip problematic pages
-    print(f"  Finished extracting text. Total characters: {len(text)}")
-    return text
+def extract_text_from_pdf(pdf_path, pdfplumber_files=[
+    "Agricola_Manual.pdf"
+]):
+    """
+    Extract text from a PDF file using pypdf by default, but use pdfplumber for files in pdfplumber_files.
+    pdfplumber_files: list of filenames (not paths) for which pdfplumber should be used.
+    """
+    if pdfplumber_files is None:
+        pdfplumber_files = []
+    filename = os.path.basename(pdf_path)
+    if filename in pdfplumber_files:
+        print(f"Extracting text from: {pdf_path} using pdfplumber (forced by user list)")
+        text = ""
+        with pdfplumber.open(pdf_path) as pdf:
+            for page_num, page in enumerate(pdf.pages):
+                try:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                except Exception as e:
+                    print(f"  Warning: Could not extract text from page {page_num + 1} of {pdf_path}. Error: {e}")
+                    continue
+        print(f"  Finished extracting text. Total characters: {len(text)}")
+        return text
+    else:
+        print(f"Extracting text from: {pdf_path} using pypdf")
+        text = ""
+        reader = PdfReader(pdf_path)
+        for page_num, page in enumerate(reader.pages):
+            try:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+            except Exception as e:
+                print(f"  Warning: Could not extract text from page {page_num + 1} of {pdf_path}. Error: {e}")
+                continue
+        print(f"  Finished extracting text. Total characters: {len(text)}")
+        return text
 
 def preprocess_text(text: str) -> str:
     """Cleans raw text extracted from PDF."""

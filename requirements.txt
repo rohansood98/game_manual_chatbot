@@ -3,10 +3,11 @@ openai>=1.0.0
 qdrant-client>=1.7.0
 python-dotenv
 tiktoken
-pypdf
 langchain
 langgraph
 langchain_openai
 boardgamegeek2
 lxml
 cryptography
+pdfplumber>=0.5.28
+pypdf>=4.0.0

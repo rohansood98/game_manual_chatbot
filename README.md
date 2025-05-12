@@ -55,7 +55,6 @@ This Streamlit application is an advanced Q&A agent for board game manuals. It u
     ```bash
     pip install -r requirements.txt
     ```
-    *Optional: If using NLTK for advanced preprocessing, you might need `python -m nltk.downloader all` locally.*
 
 5.  **Set Up Environment Variables (`.env` file):**
     *   Copy `.env.example` to `.env` in the project root: `cp .env.example .env`

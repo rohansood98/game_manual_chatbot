@@ -5,7 +5,7 @@ import pytest
 from ingest import extract_text_from_pdf, preprocess_text, chunk_text, clean_game_name
 
 data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
-sample_pdf = os.path.join(data_dir, 'Dungeons_and_Dragons_Manual.pdf')
+sample_pdf = os.path.join(data_dir, 'Ticket_to_Ride_Manual.pdf')
 
 @pytest.mark.skipif(not os.path.exists(sample_pdf), reason="Sample PDF not found.")
 def test_extract_text_from_pdf():
