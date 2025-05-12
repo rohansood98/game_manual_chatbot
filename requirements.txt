@@ -1,7 +1,7 @@
 re
 streamlit
 openai>=1.0.0
-chromadb-client
+qdrant-client>=1.7.0
 python-dotenv
 tiktoken
 pypdf

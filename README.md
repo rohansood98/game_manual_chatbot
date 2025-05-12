@@ -1,48 +1,49 @@
-# Board Game Manual LangGraph Agent (Dockerized)
+# Board Game Manual LangGraph Agent (Qdrant + Dockerized)
 
-This Streamlit application is an advanced Q&A agent for board game manuals. It uses LangGraph for orchestration, OpenAI for LLM and function calling, Chroma Cloud for vector storage, and can query BoardGameGeek. Deployment to Hugging Face Spaces is via a custom `Dockerfile`.
+This Streamlit application is an advanced Q&A agent for board game manuals. It uses:
+-   LangGraph for orchestration.
+-   OpenAI for LLM reasoning and function calling.
+-   Qdrant Cloud for vector storage and retrieval.
+-   BoardGameGeek API for external lookups.
+-   Text preprocessing for cleaner data ingestion.
+-   Docker for deployment on Hugging Face Spaces.
 
 ## Project Structure
 
--   `src/`: Contains all Python source code for the agent and Streamlit app.
-    -   `streamlit_app.py`: The main Streamlit UI.
-    -   `agent.py`: LangGraph agent definition and logic.
-    -   `tools.py`: Definitions for callable tools (Chroma search, BGG search, Clarification).
--   `data/`: For PDF manuals and the `supported_games.txt` list.
--   `Dockerfile`: Defines the container environment for Hugging Face Spaces.
--   `ingest.py`: Script to process PDFs and populate Chroma Cloud (run locally).
+-   `src/`: Contains Python source code (Streamlit app, LangGraph agent, tools).
+-   `data/`: Stores input PDF manuals and the generated `supported_games.txt`.
+-   `Dockerfile`: Defines the container environment for deployment.
+-   `ingest.py`: Script to process PDFs and populate Qdrant Cloud (run locally).
 -   `requirements.txt`: Python dependencies.
+-   `.env.example`: Template for environment variables.
 
 ## Prerequisites
 
-1.  **Accounts:** OpenAI API access, Chroma Cloud account, GitHub account, Hugging Face account.
-2.  **Software:** Git, Conda (for local environment management).
-3.  **Python:** Python 3.11 recommended for local development (matches Dockerfile).
+1.  **Accounts:** OpenAI API access, Qdrant Cloud account, GitHub account, Hugging Face account.
+2.  **Software:** Git, Conda.
+3.  **Python:** Python 3.11 recommended locally (matches `Dockerfile`).
 
-## I. Chroma Cloud Setup
+## I. Qdrant Cloud Setup
 
-1.  **Sign Up/In:** Go to [cloud.trychroma.com](https://cloud.trychroma.com/).
-2.  **Create Instance:** Create a new Chroma Cloud instance (cluster).
-3.  **Note Connection Details:** From your instance dashboard, get:
-    *   `CHROMA_SERVER_HOST`
-    *   `CHROMA_SERVER_HTTP_PORT` (usually `8000`)
-    *   `CHROMA_API_KEY` (client API key for your instance, if applicable).
-    *   Note the `CHROMA_COLLECTION_NAME` you intend to use (default is `board_game_manuals`).
+1.  **Sign Up/In:** Create an account and set up a cluster on [cloud.qdrant.io](https://cloud.qdrant.io/).
+2.  **Get Credentials:** From your Qdrant Cloud dashboard, find:
+    *   Your cluster **URL** (e.g., `https://<your-id>.<region>.cloud.qdrant.io:6333`).
+    *   An **API Key** (create one under Access Management if needed).
+3.  **Note Collection Name:** Decide on a collection name (default is `board_game_manuals`). The `ingest.py` script will create it if it doesn't exist.
 
 ## II. Local Setup
 
-1.  **Clone the Repository:**
+1.  **Clone Repository:**
     ```bash
     git clone <your-github-repo-url>
-    cd board-game-manual-qa-langgraph
+    cd board-game-manual-qa-langgraph # Navigate into the project directory
     ```
 
 2.  **Create `data/` Directory & Add PDFs:**
-    If it doesn't exist, create it.
     ```bash
     mkdir -p data
     ```
-    **Place your board game manual PDF files (e.g., `Catan_Rules.pdf`) into this `data/` directory.**
+    Place your board game manual PDF files into the `data/` directory. Can use donwloan_manuals.py to get some manuals.
 
 3.  **Create Conda Environment (Python 3.11):**
     ```bash
@@ -54,47 +55,44 @@ This Streamlit application is an advanced Q&A agent for board game manuals. It u
     ```bash
     pip install -r requirements.txt
     ```
+    *Optional: If using NLTK for advanced preprocessing, you might need `python -m nltk.downloader all` locally.*
 
 5.  **Set Up Environment Variables (`.env` file):**
-    *   Copy `.env.example` to `.env` in the project root:
-        ```bash
-        cp .env.example .env
-        ```
-    *   Edit the `.env` file and fill in your credentials:
+    *   Copy `.env.example` to `.env` in the project root: `cp .env.example .env`
+    *   Edit `.env` and fill in **your actual credentials**:
         *   `OPENAI_API_KEY`
-        *   `CHROMA_API_KEY`
-        *   `CHROMA_SERVER_HOST`
-        *   `CHROMA_SERVER_HTTP_PORT`
-        *   `CHROMA_COLLECTION_NAME` (e.g., `board_game_manuals`)
+        *   `QDRANT_URL`
+        *   `QDRANT_API_KEY` (leave blank if your cluster has no auth)
+        *   `QDRANT_COLLECTION_NAME` (e.g., `board_game_manuals`)
         *   `LANGGRAPH_AGENT_MODEL` (e.g., `gpt-4-turbo-preview`)
-        *   `HF_TOKEN` (Hugging Face access token with write permissions for Spaces)
-        *   `HF_SPACE_ID` (Your Hugging Face Space ID, e.g., `YourUsername/BoardGameAgent`)
+        *   `HF_TOKEN` (Hugging Face token for deployment)
+        *   `HF_SPACE_ID` (Your HF Space ID, e.g., `YourUsername/BoardGameAgent`)
 
-## III. Data Ingestion (into Chroma Cloud)
+## III. Data Ingestion (into Qdrant Cloud)
 
-This step processes your PDF manuals from the `data/` directory and stores their embeddings and text in Chroma Cloud. **Run this locally before the first deployment or whenever you add/change PDF manuals.**
+This step processes your local PDF manuals, preprocesses the text, generates embeddings, and stores them in your Qdrant Cloud collection. **Run this locally before the first deployment or whenever you add/change PDF manuals.**
 
 1.  **Ensure Conda Environment is Active:** `conda activate ./venv`
 2.  **Run the Ingestion Script:**
-    *   The script uses `CHROMA_COLLECTION_NAME` from your `.env` file (or defaults to `board_game_manuals`).
-    *   Ensure your PDF files are in the `data/` directory.
+    *   Uses settings from your `.env` file.
+    *   Ensure PDFs are in `data/`.
     ```bash
     python ingest.py --pdf_dir data
     ```
-    *   To use a specific collection name overriding `.env` or default for this run:
+    *   To explicitly set collection name for this run:
     ```bash
     python ingest.py --pdf_dir data --collection_name your_custom_collection
     ```
-    *   To clear an existing collection before ingesting (use with caution!):
+    *   **To clear and recreate the collection** before ingesting:
     ```bash
     python ingest.py --pdf_dir data --collection_name board_game_manuals --clear
     ```
-    *   This script will also create/update `data/supported_games.txt`.
-3.  **Commit `data/supported_games.txt`:** This file is essential for the deployed app to list supported games.
+    *   This script updates `data/supported_games.txt`.
+3.  **Commit `data/supported_games.txt`:** This file is copied into the Docker image and used by the app. **It's crucial to commit this file after running ingest.**
     ```bash
     git add data/supported_games.txt
-    git commit -m "Update list of supported game manuals"
-    # You'll push this later with other code changes.
+    git commit -m "Update list of supported game manuals after ingestion"
+    # Push later with other code changes
     ```
 
 ## IV. Local Development (Running the Agent UI)
@@ -104,45 +102,40 @@ This step processes your PDF manuals from the `data/` directory and stores their
     ```bash
     streamlit run src/streamlit_app.py
     ```
-3.  Open your browser to the URL provided by Streamlit (usually `http://localhost:8501`). Test thoroughly.
+3.  Open in browser (usually `http://localhost:8501`). Test the chat, tool usage, and clarification flow.
 
 ## V. Deployment to Hugging Face Spaces
 
 1.  **GitHub Repository:**
-    *   Ensure your project is a GitHub repository.
-    *   Commit and push all your local changes: `Dockerfile`, `src/` directory contents, `requirements.txt`, `ingest.py`, `.github/workflows/deploy.yml`, and `data/supported_games.txt`.
+    *   Ensure project is a GitHub repo.
+    *   Commit and push all local changes: `Dockerfile`, `src/`, `requirements.txt`, `ingest.py`, `.github/workflows/deploy.yml`, `data/supported_games.txt`.
 
 2.  **Hugging Face Space Setup:**
-    *   **Create a new Space on Hugging Face manually (Recommended for first time with Docker):**
-        *   Go to [huggingface.co/new-space](https://huggingface.co/new-space).
-        *   Owner: You or your organization.
-        *   Space name: (This, with owner, forms your `HF_SPACE_ID`).
-        *   **Space SDK: Select "Docker"**. Choose "No template" or a generic Docker template if offered.
-        *   Visibility: Public or Private.
-        *   Click `Create Space`.
-    *   The GitHub Action (`huggingface-cli repo create ... --exist-ok`) will attempt to create it if it doesn't exist, but it's best if it's already a "Docker" type Space.
+    *   **Create a new Space on Hugging Face (Recommended):**
+        *   SDK: **Docker** (No template or basic).
+        *   Name/Owner forms `HF_SPACE_ID`.
+    *   The GitHub Action will try to create it, but ensuring it's "Docker" type beforehand is best.
 
 3.  **GitHub Secrets:**
-    *   In your GitHub repository, go to `Settings` > `Secrets and variables` > `Actions`.
-    *   Click `New repository secret` and add:
-        *   `HF_TOKEN`: Your Hugging Face access token (must have `write` permissions).
-        *   `HF_SPACE_ID`: The ID for your Hugging Face Space (e.g., `YourHFUsername/BoardGameAgent`).
+    *   In GitHub repo `Settings > Secrets and variables > Actions`:
+        *   `HF_TOKEN`
+        *   `HF_SPACE_ID`
 
 4.  **Hugging Face Space Secrets:**
-    *   Go to your Hugging Face Space `Settings` tab.
-    *   Scroll to `Repository secrets` and click `New secret`. Add the following (these are read by your application code inside the Docker container):
+    *   In your HF Space `Settings > Repository secrets`:
         *   `OPENAI_API_KEY`
-        *   `CHROMA_API_KEY`
-        *   `CHROMA_SERVER_HOST`
-        *   `CHROMA_SERVER_HTTP_PORT`
-        *   `CHROMA_COLLECTION_NAME` (e.g., `board_game_manuals`)
-        *   `LANGGRAPH_AGENT_MODEL` (e.g., `gpt-4-turbo-preview`)
+        *   `QDRANT_URL`
+        *   `QDRANT_API_KEY` (Provide even if empty string, if your client expects it)
+        *   `QDRANT_COLLECTION_NAME`
+        *   `LANGGRAPH_AGENT_MODEL`
 
-5.  **Trigger Deployment:**
-    *   Commit and push your changes to the `main` branch (or the branch specified in `deploy.yml`) of your GitHub repository.
+5.  **Trigger Deployment:** Push changes to the `main` branch on GitHub.
     ```bash
     git add .
-    git commit -m "Prepare for Dockerized HF Spaces deployment"
+    git commit -m "Ready for Qdrant Dockerized HF deployment"
     git push origin main
     ```
-    *   This will trigger the GitHub Actions workflow in `.github/workflows/deploy.yml`.
+
+6.  **Monitor Deployment:** Check GitHub Actions. Then monitor the Docker build process in your HF Space logs. The first build can take several minutes.
+
+Your deployed agent will now use Qdrant Cloud for its knowledge base retrieval.
