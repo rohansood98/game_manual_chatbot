@@ -24,3 +24,6 @@ __pycache__/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+
+# Test output directories
+/tests/pdf_text_outputs/

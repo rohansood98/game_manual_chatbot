@@ -14,7 +14,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY") # May be None if auth not enabled
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "board_game_manuals")
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "game_manual_rag")
 
 if not OPENAI_API_KEY: raise ValueError("OPENAI_API_KEY not set.")
 if not QDRANT_URL: raise ValueError("QDRANT_URL not set.")
@@ -61,21 +61,27 @@ def extract_text_from_pdf(pdf_path):
 def preprocess_text(text: str) -> str:
     """Cleans raw text extracted from PDF."""
     print("Preprocessing text...")
-    # 1. Replace multiple spaces/tabs with a single space
+    # Remove unusual Unicode line/paragraph separators
+    text = text.replace('\u2028', ' ').replace('\u2029', ' ')
+    # Replace non-breaking spaces and other odd whitespace with a normal space
+    text = text.replace('\u00A0', ' ').replace('\u200B', '')
+    # Fix hyphenated line breaks (e.g., adven-\nture -> adventure)
+    text = re.sub(r'(\w)-\n(\w)', r'\1\2', text)
+    # Collapse single-word lines (common in some PDFs)
+    text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
+    # Remove repeated headers/footers (e.g., 'Page X of Y', 'Not for resale', etc.)
+    text = re.sub(r'\n?Page \d+ of \d+\n?', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'Not\s+for\s+resale\.', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'Permission\s+granted\s+to\s+print\s+or\s+photocopy.*?use\s+only\.', '', text, flags=re.IGNORECASE)
+    # Remove copyright and boilerplate lines
+    text = re.sub(r'Copyright \d{4},? [^\n]+\n?', '', text, flags=re.IGNORECASE)
+    # Normalize newlines (replace multiple newlines with a single newline)
+    text = re.sub(r'\n+', '\n', text)
+    # Remove extra spaces around punctuation
+    text = re.sub(r'\s+([.,;:!?])', r'\1', text)
+    text = re.sub(r'([.,;:!?])\s+', r'\1 ', text)
+    # Replace multiple spaces/tabs with a single space
     text = re.sub(r'\s+', ' ', text).strip()
-    # 2. Replace multiple newlines with a single newline (optional, might preserve paragraph structure better)
-    # text = re.sub(r'\n+', '\n', text).strip()
-    # 3. Remove specific known garbage characters or patterns (example)
-    # text = text.replace('©', '')
-    # 4. Handle hyphenated words at line breaks (optional, complex)
-    # text = re.sub(r'(\w)-\n(\w)', r'\1\2', text) # Simplistic approach
-    
-    # Add more rules as needed based on observed PDF artifacts
-    
-    # Example: Remove potential headers/footers if they follow a simple pattern
-    # like "Page X of Y" - Be careful not to remove actual content!
-    # text = re.sub(r'\nPage \d+ of \d+\n', '\n', text, flags=re.IGNORECASE)
-    
     print(f"  Preprocessing finished. Length after cleaning: {len(text)}")
     return text
 
