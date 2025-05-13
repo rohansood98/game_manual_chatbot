@@ -47,7 +47,6 @@ def router(state: AgentState) -> Literal["tools", "__end__", "clarification_need
     return "__end__"
 
 # --- Build the Graph ---
-# (Identical to previous version)
 workflow = StateGraph(AgentState)
 workflow.add_node("agent", agent_node); workflow.add_node("tools", tool_node)
 workflow.set_entry_point("agent")
@@ -58,7 +57,6 @@ print("LangGraph agent compiled.")
 
 # --- Helper to run the agent (used by streamlit_app.py) ---
 def run_agent_graph_turn(current_conversation_messages: List[BaseMessage]):
-    # (Identical logic to previous version - relies on tool output format)
     graph_input = {"messages": current_conversation_messages}
     last_ai_message_with_tool_call = None # To capture the message asking for clarification
     for event_part in agent_graph.stream(graph_input):

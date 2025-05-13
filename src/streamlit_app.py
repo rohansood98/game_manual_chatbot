@@ -4,7 +4,6 @@ import json
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
-# Absolute import for agent.py
 from src.agent import run_agent_graph_turn
 
 # --- Configuration ---
@@ -34,8 +33,7 @@ st.caption(f"Ask rule questions or for game info! Powered by LangGraph, OpenAI &
 
 # Sidebar
 with st.sidebar:
-    # (Identical to previous version, including Clear Chat button)
-    st.header("📚 Supported Game Manuals")
+    st.header("📚 Supported Game Manuals and more")
     supported_games = load_supported_games()
     for g in supported_games:
         st.markdown(f"- {g}")
@@ -49,14 +47,12 @@ with st.sidebar:
 
 
 # Initialize session state variables
-# (Identical to previous version)
 if "display_messages" not in st.session_state: st.session_state.display_messages = [{"role": "assistant", "content": "Hi! How can I help?"}]
 if "langgraph_conversation_history" not in st.session_state: st.session_state.langgraph_conversation_history = []
 if "waiting_for_clarification" not in st.session_state: st.session_state.waiting_for_clarification = False
 if "clarification_context" not in st.session_state: st.session_state.clarification_context = {}
 
 # Display chat messages
-# (Identical to previous version)
 for msg in st.session_state.display_messages:
     with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
