@@ -20,9 +20,12 @@ COPY src/ ./src/
 COPY .streamlit/config.toml ./.streamlit/config.toml
 COPY data/supported_games.txt ./data/supported_games.txt
 
-EXPOSE 8501
+ENV STREAMLIT_SERVER_PORT=7860
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_ENABLECORS=false
+
+EXPOSE 7860
+
 ENV PYTHONPATH=/app
 
-CMD ["streamlit", "run", "src/streamlit_app.py", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "src/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=7860"]
