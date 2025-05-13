@@ -24,6 +24,5 @@ EXPOSE 8501
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_ENABLECORS=false
 ENV PYTHONPATH=/app
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
 CMD ["streamlit", "run", "src/streamlit_app.py", "--server.address=0.0.0.0"]
