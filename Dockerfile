@@ -9,19 +9,15 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     git \
     libxml2-dev libxslt1-dev \
-    # Add other system deps if needed by preprocessing libs
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for caching
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
-# Optional: Download NLTK data here if using nltk for preprocessing
-# RUN python3 -m nltk.downloader punkt stopwords wordnet averaged_perceptron_tagger # Example
 
 # Copy application code and data
 COPY src/ ./src/
 COPY .streamlit/config.toml ./.streamlit/config.toml
-# Makes data/supported_games.txt available at /app/data/
 COPY data/supported_games.txt ./data/supported_games.txt
 
 EXPOSE 8501
