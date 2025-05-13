@@ -17,7 +17,7 @@ RUN pip3 install -r requirements.txt
 
 # Copy application code and data
 COPY src/ ./src/
-COPY .streamlit/config.toml ./.streamlit/config.toml
+# COPY .streamlit/config.toml ./.streamlit/config.toml
 COPY data/supported_games.txt ./data/supported_games.txt
 
 ENV STREAMLIT_SERVER_PORT=7860
