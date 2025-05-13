@@ -48,12 +48,17 @@ jobs:
           
           echo "Syncing files to Space repository..."
           rsync -av --delete \
+            --include="src/" \
+            --include="src/***" \
+            --include="Dockerfile" \
+            --include="requirements.txt" \
+            --include="README.md" \
             --include="data/" \
             --include="data/supported_games.txt" \
             --exclude="data/*" \
+            --exclude="tests/" \
             --exclude=".git/" \
             --exclude=".github/" \
-            --exclude="tests/" \
             --exclude="*" \
             ./ "$TEMP_SPACE_DIR/"
 
