@@ -44,7 +44,7 @@ jobs:
           # Create a temporary directory for cloning the Space repo
           TEMP_SPACE_DIR=$(mktemp -d)
           echo "Cloning Space repo $HF_SPACE_ID into $TEMP_SPACE_DIR"
-          huggingface-cli repo clone $HF_SPACE_ID "$TEMP_SPACE_DIR" # <--- MODIFIED LINE
+          git clone https://huggingface.co/spaces/$HF_SPACE_ID "$TEMP_SPACE_DIR"
           
           echo "Syncing files to Space repository..."
           rsync -av --delete \
