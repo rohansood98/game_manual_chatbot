@@ -20,7 +20,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Copy application code and data
 COPY src/ ./src/
-COPY data/ ./data/ # Makes data/supported_games.txt available at /app/data/
+# Makes data/supported_games.txt available at /app/data/
+COPY data/supported_games.txt ./data/supported_games.txt
 
 EXPOSE 8501
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
