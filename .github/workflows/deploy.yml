@@ -36,8 +36,8 @@ jobs:
           pip install huggingface_hub
           huggingface-cli login --token $HF_TOKEN --add-to-git-credential
           
-          echo "Ensuring Space repository exists for $HF_SPACE_ID..."
-          huggingface-cli repo create $HF_SPACE_ID --type space
+          # echo "Ensuring Space repository exists for $HF_SPACE_ID..."
+          # huggingface-cli repo create $HF_SPACE_ID --type space
           # Note: For Docker SDK, the --sdk and --python flags are not needed here.
           # The presence of a Dockerfile in your pushed code signals HF to use Docker.
           
