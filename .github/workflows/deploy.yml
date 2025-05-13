@@ -55,6 +55,8 @@ jobs:
             --include="README.md" \
             --include="data/" \
             --include="data/supported_games.txt" \
+            --include=".streamlit/" \
+            --include=".streamlit/config.toml" \
             --exclude="data/*" \
             --exclude="tests/" \
             --exclude=".git/" \
