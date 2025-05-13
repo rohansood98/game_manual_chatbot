@@ -15,7 +15,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY") # May be None if auth not enabled
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "game_manual_rag")
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "board_game_manuals")
 
 if not OPENAI_API_KEY: raise ValueError("OPENAI_API_KEY not set.")
 if not QDRANT_URL: raise ValueError("QDRANT_URL not set.")
@@ -197,6 +197,20 @@ def main(pdf_directory, collection_name_arg, clear_collection=False):
              print(f"Error checking/creating collection: {e}")
              return # Stop if we can't ensure collection exists
 
+    # Ensure Qdrant index for metadata.game_name exists (required for filtering)
+    try:
+        qdrant_client.create_payload_index(
+            collection_name=collection_name_to_use,
+            field_name="metadata.game_name",
+            field_schema="keyword"
+        )
+        print("Created Qdrant keyword index for metadata.game_name.")
+    except Exception as e:
+        if "already exists" in str(e).lower():
+            print("Qdrant keyword index for metadata.game_name already exists.")
+        else:
+            print(f"Error creating Qdrant index for metadata.game_name: {e}")
+            return
 
     # 2. Process PDFs
     pdf_files = [f for f in os.listdir(pdf_directory) if f.lower().endswith(".pdf")]

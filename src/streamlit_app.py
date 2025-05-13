@@ -4,8 +4,8 @@ import json
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
-# Relative import for agent.py
-from .agent import run_agent_graph_turn
+# Absolute import for agent.py
+from src.agent import run_agent_graph_turn
 
 # --- Configuration ---
 load_dotenv()
@@ -36,7 +36,9 @@ st.caption(f"Ask rule questions or for game info! Powered by LangGraph, OpenAI &
 with st.sidebar:
     # (Identical to previous version, including Clear Chat button)
     st.header("📚 Supported Game Manuals")
-    supported_games = load_supported_games(); [st.markdown(f"- {g}") for g in supported_games]
+    supported_games = load_supported_games()
+    for g in supported_games:
+        st.markdown(f"- {g}")
     st.markdown("---")
     st.info("Searches local manuals (via Qdrant), BoardGameGeek, or asks for clarification.")
     if st.button("Clear Chat History & Reset Agent"):

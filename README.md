@@ -99,7 +99,8 @@ This step processes your local PDF manuals, preprocesses the text, generates emb
 1.  **Ensure Conda Environment is Active.**
 2.  **Run the Streamlit App:** From the project root directory:
     ```bash
-    streamlit run src/streamlit_app.py
+    $env:PYTHONPATH = (Get-Location).Path
+streamlit run src/streamlit_app.py
     ```
 3.  Open in browser (usually `http://localhost:8501`). Test the chat, tool usage, and clarification flow.
 

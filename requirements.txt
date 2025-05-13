@@ -6,8 +6,9 @@ tiktoken
 langchain
 langgraph
 langchain_openai
-boardgamegeek2
+boardgamegeek2>=1.0.1
 lxml
 cryptography
 pdfplumber>=0.5.28
 pypdf>=4.0.0
+requests-cache==0.4.13

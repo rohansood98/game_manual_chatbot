@@ -2,10 +2,10 @@ import os
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
-from boardgamegeek2 import BGGClient
+from boardgamegeek import BGGClient
 from qdrant_client import QdrantClient, models # Qdrant imports
 from langchain_core.tools import tool
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 
 # --- Environment and Clients ---
 load_dotenv() # Load .env from root
@@ -124,7 +124,7 @@ class BGGSearchInput(BaseModel):
 
 @tool("search_boardgamegeek", args_schema=BGGSearchInput)
 def search_boardgamegeek(game_name: str, query_type: str = "general_info") -> str:
-    # (Implementation is identical to the previous version)
+    """Search for a board game on BoardGameGeek by name."""
     print(f"Tool: search_boardgamegeek called for game: '{game_name}', type: '{query_type}'")
     try:
         bgg = get_bgg_client_singleton(); games = bgg.games(game_name)
@@ -148,13 +148,13 @@ def search_boardgamegeek(game_name: str, query_type: str = "general_info") -> st
     except Exception as e: print(f"Error in search_boardgamegeek: {e}"); return f"Error searching BGG: {str(e)}"
 
 
-# Clarification tool (same as before)
+# Clarification tool (updated with docstring)
 class AskUserInput(BaseModel):
     clarifying_question: str = Field(description="The question to ask the user to get more specific information or confirm their intent.")
 
 @tool("ask_user_for_clarification", args_schema=AskUserInput)
 def ask_user_for_clarification(clarifying_question: str) -> str:
-    # (Implementation is identical to the previous version)
+    """Ask the user for clarification on a question or instruction."""
     print(f"Tool: ask_user_for_clarification called with question: '{clarifying_question}'")
     return f"CLARIFICATION_NEEDED: {clarifying_question}"
 
