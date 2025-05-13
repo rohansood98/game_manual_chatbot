@@ -1,3 +1,14 @@
+---
+title: Board Game Manual Agent
+emoji: "🎲"
+colorFrom: blue
+colorTo: green
+sdk: docker
+sdk_version: "1.0"
+app_file: src/streamlit_app.py
+pinned: false
+---
+
 # Board Game Manual LangGraph Agent (Qdrant + Dockerized)
 
 This Streamlit application is an advanced Q&A agent for board game manuals. It uses:
